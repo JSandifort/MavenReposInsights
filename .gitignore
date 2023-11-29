@@ -3,6 +3,7 @@
 .idea/
 output/
 target/
+local/
 
 # Log file
 *.log

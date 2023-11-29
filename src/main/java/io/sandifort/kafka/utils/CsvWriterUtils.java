@@ -27,13 +27,13 @@ public class CsvWriterUtils {
         this.outputDependenciesFilePath = outputDirectory + "dependencies.csv";
         this.outputRepositoriesFilePath = outputDirectory + "repositories.csv";
     }
-    public void writeToCsv(Model model, InvocationResult result) {
+    public void writeToCsv(Model model, InvocationResult result, String errorOutput) {
         Path filePath = Paths.get(outputPomsFilePath);
         if (Files.notExists(filePath)) {
             writeModelCsvFirstLine();
         }
 
-        List<String> values = getValuesAsStrings(model, result);
+        List<String> values = getValuesAsStrings(model, result, errorOutput);
 
         try {
             Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.APPEND);
@@ -85,7 +85,7 @@ public class CsvWriterUtils {
         }
     }
 
-    private static List<String> getValuesAsStrings(Model model, InvocationResult result) {
+    private static List<String> getValuesAsStrings(Model model,  InvocationResult result, String errorOutput) {
         List<String> values = new ArrayList<>();
         values.add(model.getId()); // For referencing repositories
         values.add(model.getModelVersion());
@@ -96,15 +96,16 @@ public class CsvWriterUtils {
         values.add(model.getName());
         values.add(model.getUrl());
         values.add(model.getInceptionYear());
+        try {
+            values.add(MavenDateUtils.fetchArtifactVersionDetails(model.getGroupId(), model.getArtifactId(), model.getVersion()));
+        } catch (IOException e) {
+            values.add(null);
+        }
         values.add(model.getOrganization() != null ? model.getOrganization().getName() : "");
         values.add(String.valueOf(model.getDependencies().size()));
         values.add(String.valueOf(model.getRepositories().size()));
         values.add(String.valueOf(result.getExitCode())); // exitcode 0 means success (https://maven.apache.org/shared/maven-invoker/apidocs/org/apache/maven/shared/invoker/InvocationResult.html) // A non-zero value indicates a build failure. Note: This value is undefined if getExecutionException() reports an exception.
-        if(result.getExecutionException() != null){
-            values.add(String.valueOf(result.getExecutionException().getMessage()));
-        } else {
-            values.add(String.valueOf(result.getExecutionException()));
-        }
+        values.add(errorOutput);
         return values;
     }
 
@@ -158,6 +159,7 @@ public class CsvWriterUtils {
         values.add("name");
         values.add("url");
         values.add("inceptionYear");
+        values.add("artifactDate");
         values.add("organization");
         values.add("dependenciesAmount");
         values.add("repositoriesAmount");
