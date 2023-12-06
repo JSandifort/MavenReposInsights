@@ -6,14 +6,26 @@
 
     <groupId>io.sandifort</groupId>
     <artifactId>MavenReposInsights</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
+    <packaging>pom</packaging>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <modules>
+        <module>runner</module>
+        <module>kafkadownloader</module>
+    </modules>
+
+
     <dependencies>
+        <dependency>
+            <groupId>dev.c0ps.diapper</groupId>
+            <artifactId>api</artifactId>
+            <version>0.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.c0ps.diapper</groupId>
+            <artifactId>runner</artifactId>
+            <version>0.0.4</version>
+        </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>

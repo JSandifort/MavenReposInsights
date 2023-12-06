@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.sandifort</groupId>
+        <artifactId>MavenReposInsights</artifactId>
+        <version>1.0</version>
+    </parent>
+    <artifactId>runner</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.c0ps.diapper</groupId>
+            <artifactId>runner</artifactId>
+            <version>0.0.4</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>search-for-unused-or-undeclared-deps</id>
+                        <configuration>
+                            <ignoredUnusedDeclaredDependencies combine.children="append">
+                                <!-- testing backend -->
+                                <ignoredUnusedDeclaredDependency>com.github.valfirst:slf4j-test</ignoredUnusedDeclaredDependency>
+                                <!-- plugins -->
+                                <ignoredUnusedDeclaredDependency>io.sandifort.kafkadownloader.Main</ignoredUnusedDeclaredDependency>
+                                <ignoredUnusedDeclaredDependency>io.sandifort.kafkadownloader</ignoredUnusedDeclaredDependency>
+                            </ignoredUnusedDeclaredDependencies>
+                            <ignoredDependencies combine.children="append">
+                                <ignoredDependency>org.apache.kafka:kafka-clients</ignoredDependency>
+                            </ignoredDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest combine.children="append">
+                            <mainClass>io.sandifort.runner.Runner</mainClass>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

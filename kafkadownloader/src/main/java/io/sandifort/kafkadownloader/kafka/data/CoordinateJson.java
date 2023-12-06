@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.sandifort.kafka.data;
+package io.sandifort.kafkadownloader.kafka.data;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -22,18 +22,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import dev.c0ps.maveneasyindex.Artifact;
-import io.sandifort.kafka.utils.MavenRepositoryUtils;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.shared.invoker.*;
-import dev.c0ps.maven.MavenUtilities.*;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 
 public class CoordinateJson {
 

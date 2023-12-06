@@ -1,4 +1,4 @@
-package io.sandifort.kafka.utils;
+package io.sandifort.kafkadownloader.kafka.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -6,13 +6,16 @@ import dev.c0ps.franz.KafkaConnector;
 import dev.c0ps.franz.KafkaImpl;
 import dev.c0ps.io.JsonUtils;
 import dev.c0ps.io.JsonUtilsImpl;
-import io.sandifort.kafka.data.Coordinate;
-import io.sandifort.kafka.data.CoordinateJson;
+import dev.c0ps.maveneasyindex.Artifact;
+import dev.c0ps.mx.infra.kafka.SimpleErrorMessage;
+import io.sandifort.kafkadownloader.kafka.data.*;
+import io.sandifort.kafkadownloader.kafka.data.ArtifactJson;
+import io.sandifort.kafkadownloader.kafka.data.SimpleErrorMessageJson;
 
 public class KafkaUtils {
 
     // configuration is assuming that the server auto-creates unknown topics
-    private static final String KAFKA_URL = "localhost:19092";
+    private static final String KAFKA_URL = "http://api.sandifort.io:19094";
     private static final String KAFKA_GROUP_ID = "maven-explorer";
 
     public static KafkaImpl getKafkaInstance() {
@@ -31,8 +34,11 @@ public class KafkaUtils {
     private static ObjectMapper initObjectMapper() {
         // register a (de-)serializer for the data structure of the example
         var m = new SimpleModule();
-        m.addSerializer(Coordinate.class, new CoordinateJson.CoordinateDataSerializer());
-        m.addDeserializer(Coordinate.class, new CoordinateJson.CoordinateDataDeserializer());
+        m.addSerializer(SimpleErrorMessage.class, new SimpleErrorMessageJson.SimpleErrorMessageSerializer());
+        m.addDeserializer(SimpleErrorMessage.class, new SimpleErrorMessageJson.SimpleErrorMessageDeserializer() );
+
+        m.addSerializer(Artifact.class, new ArtifactJson.ArtifacSerializer());
+        m.addDeserializer(Artifact.class, new ArtifactJson.ArtifactDeserializer() );
 
         // instead of instantiation, consider using dev.c0ps.io.ObjectMapperBuilder
         return new ObjectMapper().registerModule(m);

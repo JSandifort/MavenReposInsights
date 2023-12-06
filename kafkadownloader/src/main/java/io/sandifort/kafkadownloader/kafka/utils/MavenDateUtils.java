@@ -1,4 +1,4 @@
-package io.sandifort.kafka.utils;
+package io.sandifort.kafkadownloader.kafka.utils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

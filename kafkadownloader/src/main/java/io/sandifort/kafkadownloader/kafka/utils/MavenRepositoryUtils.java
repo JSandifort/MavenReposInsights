@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.sandifort.kafka.utils;
+package io.sandifort.kafkadownloader.kafka.utils;
 
 import dev.c0ps.commons.Asserts;
 import dev.c0ps.maven.data.Pom;

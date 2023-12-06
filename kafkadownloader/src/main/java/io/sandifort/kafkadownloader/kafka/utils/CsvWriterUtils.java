@@ -1,5 +1,9 @@
-package io.sandifort.kafka.utils;
+package io.sandifort.kafkadownloader.kafka.utils;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import dev.c0ps.maveneasyindex.Artifact;
+import jdk.jfr.StackTrace;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Repository;
@@ -11,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class CsvWriterUtils {
@@ -18,38 +23,67 @@ public class CsvWriterUtils {
     public final String csvSeparator = ",";
     public final String outputDirectory;
     public final String outputPomsFilePath;
+    public final String outputErrorPomsFilePath;
     public final String outputRepositoriesFilePath;
+    public final String outputErrorRepositoriesFilePath;
     public final String outputDependenciesFilePath;
+    public final String outputErrorDependenciesFilePath;
 
-    public CsvWriterUtils (String outputDirectory) {
-        this.outputDirectory = outputDirectory;
-        this.outputPomsFilePath = outputDirectory + "poms.csv";
-        this.outputDependenciesFilePath = outputDirectory + "dependencies.csv";
-        this.outputRepositoriesFilePath = outputDirectory + "repositories.csv";
+    @Inject
+    public CsvWriterUtils (@Named("outputDirectory") String outputDirectory) {
+        this.outputDirectory = outputDirectory.replace("\"", "");
+        this.outputPomsFilePath = outputDirectory.replace("\"", "") + "poms.csv";
+        this.outputDependenciesFilePath = outputDirectory.replace("\"", "") + "dependencies.csv";
+        this.outputRepositoriesFilePath = outputDirectory.replace("\"", "") + "repositories.csv";
+        this.outputErrorPomsFilePath = outputDirectory.replace("\"", "") + "errorPoms.csv";
+        this.outputErrorRepositoriesFilePath = outputDirectory.replace("\"", "") + "errorRepositories.csv";
+        this.outputErrorDependenciesFilePath = outputDirectory.replace("\"", "") + "errorDependencies.csv";
     }
-    public void writeToCsv(Model model, InvocationResult result, String errorOutput) {
-        Path filePath = Paths.get(outputPomsFilePath);
-        if (Files.notExists(filePath)) {
-            writeModelCsvFirstLine();
-        }
 
-        List<String> values = getValuesAsStrings(model, result, errorOutput);
+    public void writeToErrorCsv(Model model, Artifact artifact, String mavenErrorMessage) {
+        Path filePath = Paths.get(outputErrorPomsFilePath);
+        if (Files.notExists(filePath)) {
+            writeErrorModelCsvFirstLine();
+        }
+        System.out.println("csv ERROR Writing to " + outputDirectory);
+
+        List<String> values = getValuesAsStrings(model, artifact, mavenErrorMessage);
 
         try {
             Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.APPEND);
-            writeRepositoriesToCsv(model.getId(), model.getRepositories());
-            writeDependenciesToCsv(model.getId(), model.getDependencies());
+            writeRepositoriesToCsv(model.getId(), model.getRepositories(), outputErrorRepositoriesFilePath);
+            writeDependenciesToCsv(model.getId(), model.getDependencies(), outputErrorDependenciesFilePath);
         } catch (IOException e) {
             //throw new RuntimeException(e);
             //skip
         }
     }
 
-    public void writeRepositoriesToCsv(String pomId, List<Repository> repositories) {
-        if(repositories.isEmpty()) return;
-        Path filePath = Paths.get(outputRepositoriesFilePath);
+    public void writeToCsv(Model model, Artifact artifact) {
+        System.out.println("csv Writing to " + outputDirectory);
+
+        Path filePath = Paths.get(outputPomsFilePath);
         if (Files.notExists(filePath)) {
-            writeRepositoriesCsvFirstLine();
+            writeModelCsvFirstLine();
+        }
+
+        List<String> values = getValuesAsStrings(model, artifact);
+
+        try {
+            Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.APPEND);
+            writeRepositoriesToCsv(model.getId(), model.getRepositories(), outputRepositoriesFilePath);
+            writeDependenciesToCsv(model.getId(), model.getDependencies(), outputDependenciesFilePath);
+        } catch (IOException e) {
+            //throw new RuntimeException(e);
+            //skip
+        }
+    }
+
+    public void writeRepositoriesToCsv(String pomId, List<Repository> repositories, String outputDirectory) {
+        if(repositories.isEmpty()) return;
+        Path filePath = Paths.get(outputDirectory);
+        if (Files.notExists(filePath)) {
+            writeRepositoriesCsvFirstLine(outputDirectory);
         }
 
         for (Repository repository : repositories) {
@@ -66,11 +100,11 @@ public class CsvWriterUtils {
 
     }
 
-    public void writeDependenciesToCsv(String pomId, List<Dependency> dependencies) {
+    public void writeDependenciesToCsv(String pomId, List<Dependency> dependencies, String outputDirectory) {
         if(dependencies.isEmpty()) return;
-        Path filePath = Paths.get(outputDependenciesFilePath);
+        Path filePath = Paths.get(outputDirectory);
         if (Files.notExists(filePath)) {
-            writeDependenciesCsvFirstLine();
+            writeDependenciesCsvFirstLine(outputDirectory);
         }
 
         for (Dependency dependency : dependencies) {
@@ -85,7 +119,12 @@ public class CsvWriterUtils {
         }
     }
 
-    private static List<String> getValuesAsStrings(Model model,  InvocationResult result, String errorOutput) {
+    private static List<String> getValuesAsStrings(Model model, Artifact artifact, String mavenErrorMessage) {
+        var releaseDate = new Date(artifact.releaseDate);
+        var sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        // give a timezone reference for formatting (see comment at the bottom)
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
         List<String> values = new ArrayList<>();
         values.add(model.getId()); // For referencing repositories
         values.add(model.getModelVersion());
@@ -95,17 +134,34 @@ public class CsvWriterUtils {
         values.add(model.getVersion());
         values.add(model.getName());
         values.add(model.getUrl());
-        values.add(model.getInceptionYear());
-        try {
-            values.add(MavenDateUtils.fetchArtifactVersionDetails(model.getGroupId(), model.getArtifactId(), model.getVersion()));
-        } catch (IOException e) {
-            values.add(null);
-        }
+        values.add(sdf.format(releaseDate)); // convert from unix epoch
         values.add(model.getOrganization() != null ? model.getOrganization().getName() : "");
         values.add(String.valueOf(model.getDependencies().size()));
         values.add(String.valueOf(model.getRepositories().size()));
-        values.add(String.valueOf(result.getExitCode())); // exitcode 0 means success (https://maven.apache.org/shared/maven-invoker/apidocs/org/apache/maven/shared/invoker/InvocationResult.html) // A non-zero value indicates a build failure. Note: This value is undefined if getExecutionException() reports an exception.
-        values.add(errorOutput);
+        values.add(mavenErrorMessage);
+
+        return values;
+    }
+
+    private static List<String> getValuesAsStrings(Model model, Artifact artifact) {
+        var releaseDate = new Date(artifact.releaseDate);
+        var sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+        // give a timezone reference for formatting (see comment at the bottom)
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+
+        List<String> values = new ArrayList<>();
+        values.add(model.getId()); // For referencing repositories
+        values.add(model.getModelVersion());
+        values.add(model.getParent() != null ? model.getParent().getId() : "");
+        values.add(model.getGroupId());
+        values.add(model.getArtifactId());
+        values.add(model.getVersion());
+        values.add(model.getName());
+        values.add(model.getUrl());
+        values.add(sdf.format(releaseDate)); // convert from unix epoch
+        values.add(model.getOrganization() != null ? model.getOrganization().getName() : "");
+        values.add(String.valueOf(model.getDependencies().size()));
+        values.add(String.valueOf(model.getRepositories().size()));
         return values;
     }
 
@@ -137,6 +193,40 @@ public class CsvWriterUtils {
         return stringBuilder.toString();
     }
 
+    public void writeErrorModelCsvFirstLine(){
+        Path filePath = Paths.get(outputErrorPomsFilePath);
+        if (Files.notExists(filePath)) {
+            try {
+                filePath.toFile().createNewFile();
+            } catch (IOException e) {
+
+                throw new RuntimeException(e);
+
+            }
+        }
+
+        List<String> values = new ArrayList<>();
+        values.add("id");
+        values.add("modelVersion");
+        values.add("parent");
+        values.add("groupId");
+        values.add("artifactId");
+        values.add("version");
+        values.add("name");
+        values.add("url");
+        values.add("releaseDate");
+        values.add("organization");
+        values.add("dependenciesAmount");
+        values.add("repositoriesAmount");
+        values.add("mavenErrorMessage");
+
+        try {
+            Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void writeModelCsvFirstLine(){
         Path filePath = Paths.get(outputPomsFilePath);
         if (Files.notExists(filePath)) {
@@ -158,13 +248,10 @@ public class CsvWriterUtils {
         values.add("version");
         values.add("name");
         values.add("url");
-        values.add("inceptionYear");
-        values.add("artifactDate");
+        values.add("releaseDate");
         values.add("organization");
         values.add("dependenciesAmount");
         values.add("repositoriesAmount");
-        values.add("dependenciesResolvingExitCode");
-        values.add("dependenciesResolvingExecutionException");
 
         try {
             Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.WRITE);
@@ -173,8 +260,8 @@ public class CsvWriterUtils {
         }
     }
 
-    public void writeRepositoriesCsvFirstLine(){
-        Path filePath = Paths.get(outputRepositoriesFilePath);
+    public void writeRepositoriesCsvFirstLine(String outputDirectory){
+        Path filePath = Paths.get(outputDirectory);
         if (Files.notExists(filePath)) {
             try {
                 filePath.toFile().createNewFile();
@@ -197,8 +284,8 @@ public class CsvWriterUtils {
         }
     }
 
-    public void writeDependenciesCsvFirstLine(){
-        Path filePath = Paths.get(outputDependenciesFilePath);
+    public void writeDependenciesCsvFirstLine(String outputDirectory){
+        Path filePath = Paths.get(outputDirectory);
         if (Files.notExists(filePath)) {
             try {
                 filePath.toFile().createNewFile();

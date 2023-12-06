@@ -1,4 +1,4 @@
-package io.sandifort.kafka.handlers;
+package io.sandifort.kafkadownloader.kafka.handlers;
 
 import org.apache.maven.shared.invoker.InvocationOutputHandler;
 
@@ -7,15 +7,18 @@ import java.io.IOException;
 public class MavenErrorHandler implements InvocationOutputHandler {
 
     private final StringBuilder errorOutput = new StringBuilder();
-
+    private boolean firstLine = true;
     public MavenErrorHandler() {
     }
+
+
 
     @Override
     public void consumeLine(String line) throws IOException {
         //filter only error and fatal lines
-        if(line.contains("[ERROR]") || line.contains("[FATAL]")){
+        if((line.contains("[ERROR]") || line.contains("[FATAL]")) && firstLine){
             errorOutput.append(line).append("\n");
+            firstLine = false;
         }
         System.out.println(line);
     }
