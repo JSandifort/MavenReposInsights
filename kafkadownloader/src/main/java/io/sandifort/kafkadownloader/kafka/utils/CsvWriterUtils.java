@@ -32,12 +32,12 @@ public class CsvWriterUtils {
     @Inject
     public CsvWriterUtils (@Named("outputDirectory") String outputDirectory) {
         this.outputDirectory = outputDirectory.replace("\"", "");
-        this.outputPomsFilePath = outputDirectory.replace("\"", "") + "poms.csv";
-        this.outputDependenciesFilePath = outputDirectory.replace("\"", "") + "dependencies.csv";
-        this.outputRepositoriesFilePath = outputDirectory.replace("\"", "") + "repositories.csv";
-        this.outputErrorPomsFilePath = outputDirectory.replace("\"", "") + "errorPoms.csv";
-        this.outputErrorRepositoriesFilePath = outputDirectory.replace("\"", "") + "errorRepositories.csv";
-        this.outputErrorDependenciesFilePath = outputDirectory.replace("\"", "") + "errorDependencies.csv";
+        this.outputPomsFilePath = outputDirectory.replace("\"", "") + "/poms.csv";
+        this.outputDependenciesFilePath = outputDirectory.replace("\"", "") + "/dependencies.csv";
+        this.outputRepositoriesFilePath = outputDirectory.replace("\"", "") + "/repositories.csv";
+        this.outputErrorPomsFilePath = outputDirectory.replace("\"", "") + "/errorPoms.csv";
+        this.outputErrorRepositoriesFilePath = outputDirectory.replace("\"", "") + "/errorRepositories.csv";
+        this.outputErrorDependenciesFilePath = outputDirectory.replace("\"", "") + "/errorDependencies.csv";
     }
 
     public void writeToErrorCsv(Model model, Artifact artifact, String mavenErrorMessage) {
@@ -119,6 +119,11 @@ public class CsvWriterUtils {
         }
     }
 
+    private static String cleanString(String string){
+        if (string == null) return "";
+        return string.replace(",", ";");
+    }
+
     private static List<String> getValuesAsStrings(Model model, Artifact artifact, String mavenErrorMessage) {
         var releaseDate = new Date(artifact.releaseDate);
         var sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
@@ -126,19 +131,19 @@ public class CsvWriterUtils {
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
         List<String> values = new ArrayList<>();
-        values.add(model.getId()); // For referencing repositories
-        values.add(model.getModelVersion());
-        values.add(model.getParent() != null ? model.getParent().getId() : "");
-        values.add(model.getGroupId());
-        values.add(model.getArtifactId());
-        values.add(model.getVersion());
-        values.add(model.getName());
-        values.add(model.getUrl());
-        values.add(sdf.format(releaseDate)); // convert from unix epoch
-        values.add(model.getOrganization() != null ? model.getOrganization().getName() : "");
-        values.add(String.valueOf(model.getDependencies().size()));
-        values.add(String.valueOf(model.getRepositories().size()));
-        values.add(mavenErrorMessage);
+        values.add(cleanString(model.getId())); // For referencing repositories
+        values.add(cleanString(model.getModelVersion()));
+        values.add(cleanString(model.getParent() != null ? model.getParent().getId() : ""));
+        values.add(cleanString(model.getGroupId()));
+        values.add(cleanString(model.getArtifactId()));
+        values.add(cleanString(model.getVersion()));
+        values.add(cleanString(model.getName()));
+        values.add(cleanString(model.getUrl()));
+        values.add(cleanString(sdf.format(releaseDate))); // convert from unix epoch
+        values.add(cleanString(model.getOrganization() != null ? model.getOrganization().getName() : ""));
+        values.add(cleanString(String.valueOf(model.getDependencies().size())));
+        values.add(cleanString(String.valueOf(model.getRepositories().size())));
+        values.add(cleanString(mavenErrorMessage));
 
         return values;
     }
@@ -150,36 +155,36 @@ public class CsvWriterUtils {
         sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
 
         List<String> values = new ArrayList<>();
-        values.add(model.getId()); // For referencing repositories
-        values.add(model.getModelVersion());
-        values.add(model.getParent() != null ? model.getParent().getId() : "");
-        values.add(model.getGroupId());
-        values.add(model.getArtifactId());
-        values.add(model.getVersion());
-        values.add(model.getName());
-        values.add(model.getUrl());
-        values.add(sdf.format(releaseDate)); // convert from unix epoch
-        values.add(model.getOrganization() != null ? model.getOrganization().getName() : "");
-        values.add(String.valueOf(model.getDependencies().size()));
-        values.add(String.valueOf(model.getRepositories().size()));
+        values.add(cleanString(model.getId())); // For referencing repositories
+        values.add(cleanString(model.getModelVersion()));
+        values.add(cleanString(model.getParent() != null ? model.getParent().getId() : ""));
+        values.add(cleanString(model.getGroupId()));
+        values.add(cleanString(model.getArtifactId()));
+        values.add(cleanString(model.getVersion()));
+        values.add(cleanString(model.getName()));
+        values.add(cleanString(model.getUrl()));
+        values.add(cleanString(sdf.format(releaseDate))); // convert from unix epoch
+        values.add(cleanString(model.getOrganization() != null ? model.getOrganization().getName() : ""));
+        values.add(cleanString(String.valueOf(model.getDependencies().size())));
+        values.add(cleanString(String.valueOf(model.getRepositories().size())));
         return values;
     }
 
     public static List<String> getValuesAsStrings(String pomId, Repository repository) {
         List<String> values = new ArrayList<>();
-        values.add(repository.getId());
-        values.add(pomId);
-        values.add(repository.getName());
-        values.add(repository.getUrl());
+        values.add(cleanString(repository.getId()));
+        values.add(cleanString(pomId));
+        values.add(cleanString(repository.getName()));
+        values.add(cleanString(repository.getUrl()));
         return values;
     }
 
     public static List<String> getValuesAsStrings(String pomId, Dependency dependency) {
         List<String> values = new ArrayList<>();
-        values.add(pomId);
-        values.add(dependency.getGroupId());
-        values.add(dependency.getArtifactId());
-        values.add(dependency.getScope());
+        values.add(cleanString(pomId));
+        values.add(cleanString(dependency.getGroupId()));
+        values.add(cleanString(dependency.getArtifactId()));
+        values.add(cleanString(dependency.getScope()));
         return values;
     }
 

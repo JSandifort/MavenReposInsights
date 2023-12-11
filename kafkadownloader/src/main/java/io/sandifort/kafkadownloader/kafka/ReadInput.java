@@ -48,38 +48,38 @@ public class ReadInput {
     public void run() {
 
 ////        // Dependencies successfully resolved
-//        kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
-//
-//            System.out.println("Writing to " + outputDirectory);
-//            // Try to find POM file based on coordinates
-//            var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
-//            var pomFile = utils.getLocalPomFile(artifact);
-//
-//            // Extract information from POM file
-//            MavenXpp3Reader reader = new MavenXpp3Reader();
-//            try {
-//                Model model = reader.read(new FileReader(pomFile));
-//
-//                //TODO: put model in database/csv file
-//                csvWriterUtils.writeToCsv(model, artifact);
-//
-//            } catch (XmlPullParserException e) {
-////                throw new RuntimeException(e);
-//            } catch (FileNotFoundException e) {
-////                throw new RuntimeException(e);
-//            } catch (IOException e) {
-////                throw new RuntimeException(e);
-//            }
-//
-//            System.out.printf("Message via TRef: %s\n", artifact);
-//        });
+        kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
 
-        kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
+            System.out.println("Writing to " + outputDirectory);
+            // Try to find POM file based on coordinates
+            var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
+            var pomFile = utils.getLocalPomFile(artifact);
+
+            // Extract information from POM file
+            MavenXpp3Reader reader = new MavenXpp3Reader();
+            try {
+                Model model = reader.read(new FileReader(pomFile));
+
+                //TODO: put model in database/csv file
+                csvWriterUtils.writeToCsv(model, artifact);
+
+            } catch (XmlPullParserException e) {
+//                throw new RuntimeException(e);
+            } catch (FileNotFoundException e) {
+//                throw new RuntimeException(e);
+            } catch (IOException e) {
+//                throw new RuntimeException(e);
+            }
+
+            System.out.printf("Message via TRef: %s\n", artifact);
+        });
+
+//        kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
 
         // consume incoming messages until canceled
         while (isRunning.get()) {
-//            kafka.poll();
-            kafkaErrors.pollAllErrors();
+            kafka.poll();
+//            kafkaErrors.pollAllErrors();
         }
     }
 
@@ -102,8 +102,11 @@ public class ReadInput {
         try {
             result = invoker.execute(request);
         } catch (MavenInvocationException e) {
-//                throw new RuntimeException(e);
+                throw new RuntimeException(e);
         }
+
+        System.out.printf("INVOKE RESULT:     ", result.getExitCode());
+
 
         // Extract information from POM file
         MavenXpp3Reader reader = new MavenXpp3Reader();
@@ -114,11 +117,11 @@ public class ReadInput {
             csvWriterUtils.writeToErrorCsv(model, artifact, mavenErrorHandler.getErrorOutputWithoutNewLines());
 
         } catch (XmlPullParserException e) {
-//                throw new RuntimeException(e);
+                throw new RuntimeException(e);
         } catch (FileNotFoundException e) {
-//                throw new RuntimeException(e);
+                throw new RuntimeException(e);
         } catch (IOException e) {
-//                throw new RuntimeException(e);
+                throw new RuntimeException(e);
         }
 
         System.out.printf("Message via TRef: %s\n", artifact);
@@ -140,7 +143,7 @@ public class ReadInput {
         Invoker invoker = new DefaultInvoker();
         invoker.setMavenExecutable(new File(mavenCmdPath));
         invoker.setMavenHome(new File(mavenHomePath));
-        invoker.setLocalRepositoryDirectory(new File(mavenRepoDirectory, "repository"));
+//        invoker.setLocalRepositoryDirectory(new File(mavenRepoDirectory, "repository"));
         return invoker;
     }
 }

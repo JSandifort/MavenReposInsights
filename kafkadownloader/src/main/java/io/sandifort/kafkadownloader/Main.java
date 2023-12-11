@@ -1,6 +1,5 @@
 package io.sandifort.kafkadownloader;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.Guice;
@@ -40,22 +39,6 @@ public class Main implements Runnable {
         var om = new ObjectMapper().registerModules(list);
         var injector = Guice.createInjector();
         injector.injectMembers(om);
-
-        Properties properties = new Properties();
-        File initialFile = new File("app.properties");
-        InputStream targetStream = null;
-
-        try {
-            targetStream = new FileInputStream(initialFile);
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            properties.load(targetStream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
         readInput.run();
 
