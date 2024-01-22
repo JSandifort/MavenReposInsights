@@ -143,6 +143,12 @@ public class InsightsConfig implements IInjectorConfig {
     }
 
     @Provides
+    @Named("shouldSubscribeErrors")
+    public boolean shouldSubscribeErrors() {
+        return args.shouldSubscribeErrors;
+    }
+
+    @Provides
     @Named("KafkaConnector.serverUrl")
     public String bindKafkaConnectorServerUrl() {
         return "http://api.sandifort.io:19092";

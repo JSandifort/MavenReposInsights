@@ -15,5 +15,7 @@ public class InsightsArgs {
     @Parameter(names = "--outputDirectory", arity = 1, description = "absolute path to the output directory")
     public String outputDirectory;
 
+    @Parameter(names = "--shouldSubscribeErrors", arity = 1, description = "indicates whether to subscribe to error lane (true) or to subscribe to the normal lane (false)")
+    public boolean shouldSubscribeErrors;
 
 }

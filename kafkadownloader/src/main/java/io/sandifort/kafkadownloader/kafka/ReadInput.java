@@ -29,12 +29,12 @@ public class ReadInput {
     private final String mavenCmdPath;
     private final String mavenHomePath;
     private final String outputDirectory;
+    private final boolean shouldSubscribeErrors;
     private final CsvWriterUtils csvWriterUtils;
     public static final String INPUT_TOPIC = "maven-explorer.downloaded";
-    public static final String SEPERATE_LOCAL_REPOSITORY = "local";
 
     @Inject
-    public ReadInput(Kafka kafka, KafkaErrors kafkaErrors, AtomicBoolean isRunning, @Named("MavenRepoDirectory") String mavenRepoDirectory, @Named("mavenCmdPath") String mavenCmdPath, @Named("mavenHomePath") String mavenHomePath, @Named("outputDirectory") String outputDirectory, CsvWriterUtils csvWriterUtils) {
+    public ReadInput(Kafka kafka, KafkaErrors kafkaErrors, AtomicBoolean isRunning, @Named("MavenRepoDirectory") String mavenRepoDirectory, @Named("mavenCmdPath") String mavenCmdPath, @Named("mavenHomePath") String mavenHomePath, @Named("outputDirectory") String outputDirectory, @Named("shouldSubscribeErrors") boolean shouldSubscribeErrors, CsvWriterUtils csvWriterUtils) {
         this.kafka = kafka;
         this.kafkaErrors = kafkaErrors;
         this.isRunning = isRunning;
@@ -42,44 +42,51 @@ public class ReadInput {
         this.mavenCmdPath = mavenCmdPath;
         this.mavenHomePath = mavenHomePath;
         this.outputDirectory = outputDirectory;
+        this.shouldSubscribeErrors = shouldSubscribeErrors;
         this.csvWriterUtils = csvWriterUtils;
     }
 
     public void run() {
 
         // Dependencies successfully resolved
-//        kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
-//
-//            System.out.println("Writing to " + outputDirectory);
-//            // Try to find POM file based on coordinates
-//            var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
-//            var pomFile = utils.getLocalPomFile(artifact);
-//
-//            // Extract information from POM file
-//            MavenXpp3Reader reader = new MavenXpp3Reader();
-//            try {
-//                Model model = reader.read(new FileReader(pomFile));
-//
-//                //TODO: put model in database/csv file
-//                csvWriterUtils.writeToCsv(model, artifact);
-//
-//            } catch (Exception e){
-//                throw new RuntimeException(e);
-//            }
-//
-//            System.out.printf("Message via TRef: %s\n", artifact);
-//        });
+        if (!shouldSubscribeErrors) {
+            kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
 
-        kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
+                System.out.println("Writing to " + outputDirectory);
+                // Try to find POM file based on coordinates
+                var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
+                var pomFile = utils.getLocalPomFile(artifact);
+
+                // Extract information from POM file
+                MavenXpp3Reader reader = new MavenXpp3Reader();
+                try {
+                    Model model = reader.read(new FileReader(pomFile));
+
+                    //TODO: put model in database/csv file
+                    csvWriterUtils.writeToCsv(model, artifact);
+
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                System.out.printf("Message via TRef: %s\n", artifact);
+            });
+        } else {
+            kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
+        }
+
 
         // consume incoming messages until canceled
         while (isRunning.get()) {
-//            kafka.poll();
-            kafkaErrors.pollAllErrors();
+            if (!shouldSubscribeErrors) {
+                kafka.poll();
+            } else {
+                kafkaErrors.pollAllErrors();
+            }
         }
     }
 
-    private void processError(SimpleErrorMessage<Artifact> simpleErrorMessage){
+    private void processError(SimpleErrorMessage<Artifact> simpleErrorMessage) {
         var artifact = simpleErrorMessage.obj;
         if (artifact == null) {
             return;
@@ -98,7 +105,7 @@ public class ReadInput {
         try {
             result = invoker.execute(request);
         } catch (MavenInvocationException e) {
-                throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
 
         System.out.printf("INVOKE RESULT:     ", result.getExitCode());
@@ -113,11 +120,11 @@ public class ReadInput {
             csvWriterUtils.writeToErrorCsv(model, artifact, mavenErrorHandler.getErrorOutputWithoutNewLines());
 
         } catch (XmlPullParserException e) {
-                throw new RuntimeException(e);
+            throw new RuntimeException(e);
         } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+            throw new RuntimeException(e);
         } catch (IOException e) {
-                throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
 
         System.out.printf("Message via TRef: %s\n", artifact);
