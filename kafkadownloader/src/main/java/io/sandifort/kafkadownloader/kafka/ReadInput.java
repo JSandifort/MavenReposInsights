@@ -47,39 +47,35 @@ public class ReadInput {
 
     public void run() {
 
-////        // Dependencies successfully resolved
-        kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
-
-            System.out.println("Writing to " + outputDirectory);
-            // Try to find POM file based on coordinates
-            var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
-            var pomFile = utils.getLocalPomFile(artifact);
-
-            // Extract information from POM file
-            MavenXpp3Reader reader = new MavenXpp3Reader();
-            try {
-                Model model = reader.read(new FileReader(pomFile));
-
-                //TODO: put model in database/csv file
-                csvWriterUtils.writeToCsv(model, artifact);
-
-            } catch (XmlPullParserException e) {
+        // Dependencies successfully resolved
+//        kafka.subscribe(ReadInput.INPUT_TOPIC, Artifact.class, (artifact, l) -> {
+//
+//            System.out.println("Writing to " + outputDirectory);
+//            // Try to find POM file based on coordinates
+//            var utils = new MavenRepositoryUtils(new File(mavenRepoDirectory));
+//            var pomFile = utils.getLocalPomFile(artifact);
+//
+//            // Extract information from POM file
+//            MavenXpp3Reader reader = new MavenXpp3Reader();
+//            try {
+//                Model model = reader.read(new FileReader(pomFile));
+//
+//                //TODO: put model in database/csv file
+//                csvWriterUtils.writeToCsv(model, artifact);
+//
+//            } catch (Exception e){
 //                throw new RuntimeException(e);
-            } catch (FileNotFoundException e) {
-//                throw new RuntimeException(e);
-            } catch (IOException e) {
-//                throw new RuntimeException(e);
-            }
+//            }
+//
+//            System.out.printf("Message via TRef: %s\n", artifact);
+//        });
 
-            System.out.printf("Message via TRef: %s\n", artifact);
-        });
-
-//        kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
+        kafkaErrors.subscribeErrors(ReadInput.INPUT_TOPIC, SimpleErrorMessage.class, this::processError);
 
         // consume incoming messages until canceled
         while (isRunning.get()) {
-            kafka.poll();
-//            kafkaErrors.pollAllErrors();
+//            kafka.poll();
+            kafkaErrors.pollAllErrors();
         }
     }
 
@@ -133,6 +129,7 @@ public class ReadInput {
         request.setPomFile(pomFile);
         request.setGoals(Arrays.asList("dependency:tree")); //TODO: determine and set right maven command to resolve dependencies
         // Set custom settings.xml file to avoid having credentials in the default settings.xml file
+        request.setUserSettingsFile(new File("settings.xml"));
         // Set local repository to a separate directory to avoid caching
         request.setErrorHandler(mavenErrorHandler);
         request.setOutputHandler(mavenErrorHandler);
@@ -143,6 +140,7 @@ public class ReadInput {
         Invoker invoker = new DefaultInvoker();
         invoker.setMavenExecutable(new File(mavenCmdPath));
         invoker.setMavenHome(new File(mavenHomePath));
+        invoker.setLocalRepositoryDirectory(new File(mavenRepoDirectory, "repository"));
 //        invoker.setLocalRepositoryDirectory(new File(mavenRepoDirectory, "repository"));
         return invoker;
     }

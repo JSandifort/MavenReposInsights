@@ -16,7 +16,7 @@ public class KafkaUtils {
 
     // configuration is assuming that the server auto-creates unknown topics
     private static final String KAFKA_URL = "http://api.sandifort.io:19094";
-    private static final String KAFKA_GROUP_ID = "maven-explorer";
+    private static final String KAFKA_GROUP_ID = "kafka-downloader_600";
 
     public static KafkaImpl getKafkaInstance() {
         return new KafkaImpl(initJsonUtils(), initConnector(), true);

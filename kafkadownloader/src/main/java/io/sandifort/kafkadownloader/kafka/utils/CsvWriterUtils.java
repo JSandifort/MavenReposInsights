@@ -73,9 +73,9 @@ public class CsvWriterUtils {
             Files.write(filePath, buildCsvText(values).getBytes(), StandardOpenOption.APPEND);
             writeRepositoriesToCsv(model.getId(), model.getRepositories(), outputRepositoriesFilePath);
             writeDependenciesToCsv(model.getId(), model.getDependencies(), outputDependenciesFilePath);
-        } catch (IOException e) {
-            //throw new RuntimeException(e);
-            //skip
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+            //
         }
     }
 

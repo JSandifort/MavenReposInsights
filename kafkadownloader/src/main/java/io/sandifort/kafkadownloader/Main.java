@@ -9,9 +9,7 @@ import dev.c0ps.maveneasyindex.ArtifactModule;
 import io.sandifort.kafkadownloader.configuration.SimpleErrorModule;
 import io.sandifort.kafkadownloader.kafka.ReadInput;
 
-import java.io.*;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 

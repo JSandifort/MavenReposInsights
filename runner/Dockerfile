@@ -16,6 +16,7 @@ VOLUME /inside/m2/repository
 
 WORKDIR /usr/local/runme
 
-COPY ../target/runner-1.0.jar server.jar
+COPY settings.xml /usr/local/runme/
+COPY ../target/runner-1.0-jar-with-dependencies.jar server.jar
 
 ENTRYPOINT exec java $JAVA_OPTS -jar server.jar $0 $@
