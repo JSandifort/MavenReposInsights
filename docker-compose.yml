@@ -1,0 +1,32 @@
+services:
+  kafkadownloader1:
+    image: jsandifort/kafkadownloader:latest
+    restart: "unless-stopped"
+    volumes: [
+      "/home/depgraph/output1:/output1",
+      "/home/depgraph/caches/m2/repository:/inside/m2/repository"
+    ]
+    command: [
+      "--run", "io.sandifort.kafkadownloader.Main",
+      "--logLevel", "DEBUG",
+      "--mavenRepoDirectory", "/inside/m2",
+      "--mavenCmdPath", "/usr/share/maven/bin/mvn",
+      "--mavenHomePath", "/usr/share/maven",
+      "--outputDirectory", "/output1"
+    ]
+  kafkadownloader2:
+    image: jsandifort/kafkadownloader:latest
+    restart: "unless-stopped"
+    volumes: [
+      "/home/depgraph/output2:/output2",
+      "/home/depgraph/caches/m2/repository:/inside/m2/repository"
+    ]
+    command: [
+      "--run", "io.sandifort.kafkadownloader.Main",
+      "--logLevel", "DEBUG",
+      "--mavenRepoDirectory", "/inside/m2",
+      "--mavenCmdPath", "/usr/share/maven/bin/mvn",
+      "--mavenHomePath", "/usr/share/maven",
+      "--outputDirectory", "/output2",
+      "--shouldSubscribeErrors", "false"
+    ]

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.sandifort</groupId>
+        <artifactId>MavenReposInsights</artifactId>
+        <version>1.0</version>
+    </parent>
+    <artifactId>runner</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.c0ps.diapper</groupId>
+            <artifactId>api</artifactId>
+            <version>0.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.c0ps.diapper</groupId>
+            <artifactId>runner</artifactId>
+            <version>0.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.c0ps.maven-explorer</groupId>
+            <artifactId>infrastructure</artifactId>
+            <version>0.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.c0ps.io</groupId>
+            <artifactId>impl</artifactId>
+            <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-invoker</artifactId>
+            <version>3.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-shared-utils</artifactId>
+            <version>3.3.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>4.0.0-alpha-7</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.c0ps.maven-easy-index</groupId>
+            <artifactId>data</artifactId>
+            <version>0.0.9</version>
+        </dependency>
+        <!-- cops -->
+        <dependency>
+            <groupId>dev.c0ps</groupId>
+            <artifactId>commons-maven</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.maven/maven-model -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>3.9.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.sandifort</groupId>
+        <artifactId>kafkadownloader</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>search-for-unused-or-undeclared-deps</id>
+                        <configuration>
+                            <ignoredUnusedDeclaredDependencies combine.children="append">
+                                <!-- testing backend -->
+                                <ignoredUnusedDeclaredDependency>com.github.valfirst:slf4j-test</ignoredUnusedDeclaredDependency>
+                                <!-- plugins -->
+                                <ignoredUnusedDeclaredDependency>dev.c0ps.diapper</ignoredUnusedDeclaredDependency>
+
+                            </ignoredUnusedDeclaredDependencies>
+                            <ignoredDependencies combine.children="append">
+                                <ignoredDependency>org.apache.kafka:kafka-clients</ignoredDependency>
+                            </ignoredDependencies>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest combine.children="append">
+                            <mainClass>io.sandifort.runner.RunRunner</mainClass>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2-beta-5</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest combine.children="append">
+                            <mainClass>io.sandifort.runner.RunRunner</mainClass>
+                            <addClasspath>true</addClasspath>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
